@@ -1,0 +1,852 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <title>Internal Marks & Instant Target Calculator</title>
+    
+    <meta name="description" content="Calculate your Internal marks (60), instantly track your target, and find out how many extra external marks you need if you miss it.">
+    <meta name="keywords" content="Marks Calculator, Internals, Target Calculator, College">
+    <meta name="author" content="eshwar">
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    
+    <style>
+        /* Modern UI Variables */
+        :root {
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --bg-color: #f8fafc;
+            --surface: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --border-light: #e2e8f0;
+            --border-focus: #93c5fd;
+            --success: #10b981;
+            --success-bg: #d1fae5;
+            --warning: #f59e0b;
+            --warning-bg: #fef3c7;
+            --danger: #ef4444;
+            --danger-bg: #fee2e2;
+            --radius-md: 10px;
+            --radius-lg: 16px;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
+        /* Base & Reset */
+        *, *::before, *::after { box-sizing: border-box; }
+        body { 
+            font-family: var(--font-family); 
+            background-color: var(--bg-color); 
+            color: var(--text-main);
+            padding: 40px 20px; 
+            margin: 0; 
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+        }
+        
+        /* Container Styles */
+        .container { 
+            max-width: 1150px; 
+            margin: auto; 
+            background: var(--surface); 
+            padding: 40px; 
+            border-radius: var(--radius-lg); 
+            box-shadow: var(--shadow-lg); 
+            width: 100%; 
+        }
+        
+        h1 { 
+            text-align: center; 
+            color: var(--text-main); 
+            margin-top: 0; 
+            margin-bottom: 8px; 
+            font-size: 2.25em; 
+            font-weight: 800;
+            letter-spacing: -0.025em;
+        }
+        
+        p.subtitle { 
+            text-align: center; 
+            color: var(--text-muted); 
+            margin-top: 0; 
+            margin-bottom: 35px; 
+            font-size: 1.05em; 
+            font-weight: 400;
+        }
+        
+        /* Main Entry Form Styles */
+        .subject-block { 
+            border: 1px solid var(--border-light); 
+            padding: 25px; 
+            border-radius: var(--radius-lg); 
+            margin-bottom: 30px; 
+            background: #fcfcfc; 
+            box-shadow: var(--shadow-sm);
+        }
+        
+        .subject-header { margin-bottom: 20px; }
+        .subject-controls { display: flex; gap: 15px; align-items: center; width: 100%; }
+        
+        /* Top Input Styling */
+        .subject-input { 
+            font-size: 1rem; 
+            padding: 12px 16px; 
+            border-radius: var(--radius-md); 
+            transition: all 0.2s ease;
+            font-family: inherit;
+        }
+        
+        .name-input { 
+            font-weight: 600; 
+            border: 1px solid transparent; 
+            background: var(--bg-color); 
+            flex: 2; 
+            min-width: 150px; 
+            color: var(--text-main);
+        }
+        .name-input:focus { 
+            outline: none; 
+            background: var(--surface); 
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+        }
+        
+        .type-select { 
+            font-weight: 500; 
+            border: 1px solid var(--border-light); 
+            background: var(--surface);
+            flex: 1; 
+            min-width: 140px; 
+            cursor: pointer;
+            color: var(--text-main);
+        }
+        .type-select:focus { 
+            border-color: var(--primary); 
+            outline: none; 
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1); 
+        }
+        
+        .target-group { 
+            display: flex; 
+            align-items: center; 
+            justify-content: space-between; 
+            gap: 12px; 
+            background: #eff6ff; 
+            padding: 8px 16px; 
+            border-radius: var(--radius-md); 
+            border: 1px solid #bfdbfe;
+            flex: 1; 
+            min-width: 200px; 
+            flex-wrap: wrap; /* Added wrap to accommodate warning messages */
+        }
+        .target-group label { margin: 0; font-size: 0.95em; color: var(--primary); font-weight: 600; white-space: nowrap; }
+        .target-group input { 
+            font-weight: 700; 
+            color: var(--primary); 
+            border: 2px solid var(--primary); 
+            width: 80px; 
+            padding: 8px; 
+            text-align: center;
+            background: var(--surface);
+            border-radius: 8px;
+        }
+        
+        /* Range Warnings & Errors styling */
+        .range-warning {
+            color: var(--danger);
+            font-size: 0.75em;
+            font-weight: 600;
+            margin-top: 6px;
+            display: none; /* Hidden by default */
+            align-items: center;
+            gap: 4px;
+            animation: fadeIn 0.2s ease-in-out;
+        }
+        .target-group .range-warning {
+            width: 100%;
+            justify-content: flex-end;
+            margin-top: 0;
+        }
+        .input-error {
+            border-color: var(--danger) !important;
+            box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.15) !important;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-3px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Live Target Status Box */
+        .live-target-box { 
+            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); 
+            border: 1px solid #bbf7d0;
+            padding: 16px 24px; 
+            border-radius: var(--radius-md); 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            margin-bottom: 25px; 
+            font-weight: 600; 
+            font-size: 1em; 
+            flex-wrap: wrap; 
+            gap: 12px; 
+            box-shadow: var(--shadow-sm);
+        }
+        .live-target-box span { color: #166534; }
+        .live-target-box .current-score { font-size: 1.25em; color: #15803d; font-weight: 800; }
+        
+        /* Layout for Form Halves & Rules */
+        .form-layout { display: flex; flex-wrap: wrap; gap: 25px; }
+        .form-halves { flex: 3; display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+        .modules-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; }
+        
+        .rules-sidebar { 
+            flex: 1; 
+            min-width: 250px; 
+            background: var(--bg-color); 
+            border: 1px solid var(--border-light); 
+            border-radius: var(--radius-md); 
+            padding: 20px; 
+            font-size: 0.9em; 
+            color: var(--text-muted); 
+        }
+        .rules-sidebar h4 { margin-top: 0; margin-bottom: 15px; color: var(--text-main); border-bottom: 1px solid var(--border-light); padding-bottom: 10px; font-weight: 700; }
+        .rules-sidebar ul { margin: 0; padding-left: 20px; line-height: 1.8; }
+        .rules-sidebar li b { color: var(--text-main); }
+        
+        /* Grids & Inputs */
+        .module-card {
+            background: var(--surface);
+            border: 1px solid var(--border-light);
+            padding: 16px;
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
+        .grid-other { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
+        
+        label { font-size: 0.85em; font-weight: 600; color: var(--text-muted); display: block; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em; }
+        input[type="number"], input[type="text"]:not(.name-input) { 
+            width: 100%; 
+            padding: 10px 12px; 
+            border: 1px solid var(--border-light); 
+            border-radius: 8px; 
+            transition: all 0.2s ease; 
+            font-size: 0.95em; 
+            background: var(--surface);
+            color: var(--text-main);
+            font-weight: 500;
+        }
+        input:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1); background: var(--surface); }
+        input:disabled { background: var(--bg-color); font-weight: 700; color: var(--text-muted); border-color: transparent; cursor: not-allowed; }
+        
+        /* Section Titles */
+        .section-title { font-size: 0.95em; font-weight: 700; color: var(--text-main); margin-bottom: 12px; }
+        
+        /* Modern Buttons */
+        .controls { display: flex; gap: 15px; margin-top: 30px; flex-wrap: wrap; }
+        button.main-btn { 
+            flex: 1; 
+            min-width: 200px; 
+            padding: 14px 20px; 
+            border: none; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            font-weight: 600; 
+            font-size: 1em; 
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); 
+            box-shadow: var(--shadow-sm); 
+            font-family: inherit;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        button.main-btn:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); filter: brightness(1.05); }
+        button.main-btn:active { transform: translateY(0); box-shadow: var(--shadow-sm); }
+        
+        .add-btn { background: var(--primary); color: white; }
+        .pdf-btn { background: var(--surface); color: var(--text-main); border: 1px solid var(--border-light); }
+        .pdf-btn:hover { background: var(--bg-color); border-color: #cbd5e1; }
+        
+        /* Table Styles */
+        .table-header-container { display: flex; justify-content: space-between; align-items: flex-end; margin-top: 45px; margin-bottom: 15px; }
+        .table-header-container h3 { color: var(--text-main); margin: 0; font-size: 1.5em; font-weight: 800; }
+        
+        #results-area { 
+            overflow-x: auto; 
+            -webkit-overflow-scrolling: touch; 
+            border-radius: var(--radius-md); 
+            box-shadow: 0 0 0 1px var(--border-light), var(--shadow-md); 
+            background: var(--surface);
+        }
+        .result-table { width: 100%; border-collapse: collapse; min-width: 900px; }
+        .result-table th, .result-table td { 
+            border-bottom: 1px solid var(--border-light); 
+            padding: 16px 20px; 
+            text-align: center; 
+            font-size: 0.95em; 
+        }
+        .result-table th { 
+            background-color: var(--bg-color); 
+            font-weight: 600; 
+            color: var(--text-muted); 
+            white-space: nowrap; 
+            text-transform: uppercase;
+            font-size: 0.75em;
+            letter-spacing: 0.05em;
+        }
+        .result-table tr:last-child td { border-bottom: none; }
+        .result-table tr:hover td { background-color: #f8fafc; }
+        
+        /* Action buttons in table */
+        .action-btn { 
+            padding: 8px 14px; 
+            border: none; 
+            border-radius: 6px; 
+            cursor: pointer; 
+            font-size: 0.85em; 
+            font-weight: 600; 
+            margin: 0 4px; 
+            transition: all 0.2s ease; 
+            font-family: inherit;
+        }
+        .edit-btn { background: #eff6ff; color: var(--primary); border: 1px solid #bfdbfe; }
+        .edit-btn:hover { background: #dbeafe; }
+        .del-btn { background: #fef2f2; color: var(--danger); border: 1px solid #fecaca; }
+        .del-btn:hover { background: #fee2e2; }
+        
+        footer { text-align: center; margin-top: 50px; font-size: 0.9em; color: var(--text-muted); font-weight: 500; }
+        
+        /* Print Styles */
+        @media print { 
+            .no-print { display: none !important; } 
+            body { background: white; padding: 0; }
+            .container { box-shadow: none; padding: 0; max-width: 100%; }
+            #results-area { box-shadow: none; border: 1px solid #ddd; }
+            .result-table th, .result-table td { border: 1px solid #ddd; padding: 10px; }
+            .result-table th { background-color: #f3f4f6; color: #000; }
+        }
+
+        /* --- RESPONSIVE DESIGN --- */
+        @media (max-width: 900px) {
+            .subject-controls { flex-wrap: wrap; }
+            .name-input { flex: 100%; min-width: 100%; }
+            .target-group { flex: 1; }
+        }
+
+        @media (max-width: 768px) {
+            body { padding: 15px; }
+            .container { padding: 25px 20px; }
+            h1 { font-size: 1.8em; }
+            
+            .subject-controls { flex-direction: column; align-items: stretch; gap: 12px; }
+            .name-input, .type-select, .target-group { width: 100%; }
+            .target-group input { width: 100px; }
+            
+            .live-target-box { flex-direction: column; align-items: flex-start; }
+            
+            .form-layout { flex-direction: column; }
+            .rules-sidebar { min-width: 100%; order: -1; margin-bottom: 10px; } 
+            
+            .grid-other { grid-template-columns: repeat(2, 1fr); }
+            .grid-other > div:last-child { grid-column: 1 / -1; } 
+            
+            .table-header-container { flex-direction: column; align-items: flex-start; gap: 10px; }
+        }
+
+        @media (max-width: 480px) {
+            body { padding: 0; background: var(--surface); }
+            .container { border-radius: 0; box-shadow: none; padding: 20px 15px; }
+            
+            .grid { grid-template-columns: 1fr; gap: 15px; } 
+            .grid-other { grid-template-columns: 1fr; }
+            .grid-other > div:last-child { grid-column: auto; }
+            
+            .controls { flex-direction: column; }
+            button.main-btn { width: 100%; min-width: 100%; }
+            
+            .subject-block { padding: 20px 15px; border: none; background: transparent; border-bottom: 1px solid var(--border-light); border-radius: 0; box-shadow: none; margin-bottom: 20px; }
+            .module-card { padding: 0; border: none; box-shadow: none; background: transparent; margin-bottom: 15px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container" id="content-to-export">
+    <h1>VFSTR Internals Calculator</h1>
+    <p class="subtitle no-print">Internals Calculator Webpage.</p>
+    
+    <!-- MASTER DATA ENTRY FORM -->
+    <div class="subject-block no-print" id="entry-form">
+        <div class="subject-header">
+            <div class="subject-controls">
+                <input type="text" id="inp-name" class="subject-input name-input" placeholder="Subject Name (e.g.HTML)">
+                
+                <select id="inp-type" class="subject-input type-select">
+                    <option value="theory">Theory Only</option>
+                    <option value="practical">Practical Only</option>
+                    <option value="both">Theory + Practical</option>
+                </select>
+                
+                <div class="target-group">
+                    <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                        <label>Target (Max 60):</label>
+                        <input type="number" id="inp-target" class="subject-input" value="50" max="60">
+                    </div>
+                    <div class="range-warning" id="warn-inp-target">⚠️ Max 60</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="live-target-box" id="status-container">
+            <span>Current Scored: <span id="live-current" class="current-score">0.00</span> <span style="font-size:0.9em; font-weight:500;">/ 60</span></span>
+            <span>Target: <span id="live-target-display" style="font-size:1.1em;">50</span></span>
+            <span id="live-status" style="color:var(--warning); font-weight:700;">Need 50.00 more marks</span>
+        </div>
+        
+        <div class="form-layout">
+            <!-- LEFT AREA: Form Halves -->
+            <div class="form-halves">
+                <div class="modules-grid">
+                    <!-- Half 1: Module 1 -->
+                    <div class="module-card">
+                        <div class="section-title">Module 1 (Scaled to 25)</div>
+                        <div class="grid">
+                            <div>
+                                <label>FA1 (10)</label>
+                                <input type="number" id="inp-fa1" class="live-input" value="0" max="10">
+                                <div class="range-warning" id="warn-inp-fa1">⚠️ Max 10</div>
+                            </div>
+                            <div>
+                                <label>FA2 (20)</label>
+                                <input type="number" id="inp-fa2" class="live-input" value="0" max="20">
+                                <div class="range-warning" id="warn-inp-fa2">⚠️ Max 20</div>
+                            </div>
+                            <div>
+                                <label>CLA1 (10)</label>
+                                <input type="number" id="inp-cla1" class="live-input" value="0" max="10">
+                                <div class="range-warning" id="warn-inp-cla1">⚠️ Max 10</div>
+                            </div>
+                            <div>
+                                <label>CLA2 (10)</label>
+                                <input type="number" id="inp-cla2" class="live-input" value="0" max="10">
+                                <div class="range-warning" id="warn-inp-cla2">⚠️ Max 10</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Half 2: Module 2 -->
+                    <div class="module-card">
+                        <div class="section-title">Module 2 (Scaled to 25)</div>
+                        <div class="grid">
+                            <div>
+                                <label>FA3 (10)</label>
+                                <input type="number" id="inp-fa3" class="live-input" value="0" max="10">
+                                <div class="range-warning" id="warn-inp-fa3">⚠️ Max 10</div>
+                            </div>
+                            <div>
+                                <label>FA4 (20)</label>
+                                <input type="number" id="inp-fa4" class="live-input" value="0" max="20">
+                                <div class="range-warning" id="warn-inp-fa4">⚠️ Max 20</div>
+                            </div>
+                            <div>
+                                <label>CLA3 (10)</label>
+                                <input type="number" id="inp-cla3" class="live-input" value="0" max="10">
+                                <div class="range-warning" id="warn-inp-cla3">⚠️ Max 10</div>
+                            </div>
+                            <div>
+                                <label>CLA4 (10)</label>
+                                <input type="number" id="inp-cla4" class="live-input" value="0" max="10">
+                                <div class="range-warning" id="warn-inp-cla4">⚠️ Max 10</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bottom Area: Other Internals -->
+                <div class="module-card">
+                    <div class="section-title">Other Internals & Attendance</div>
+                    <div class="grid-other">
+                        <div>
+                            <label>CLA5 (Max 8)</label>
+                            <input type="number" id="inp-cla5" class="live-input" value="0" max="8">
+                            <div class="range-warning" id="warn-inp-cla5">⚠️ Max 8</div>
+                        </div>
+                        <div>
+                            <label>Attendance %</label>
+                            <input type="number" id="inp-attp" class="live-input" value="100" max="100" style="background:#eff6ff;">
+                            <div class="range-warning" id="warn-inp-attp">⚠️ Max 100</div>
+                        </div>
+                        <div>
+                            <label>Attd Marks Granted</label>
+                            <input type="text" id="live-attm" value="2" disabled>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RIGHT AREA: Small Rules Sidebar -->
+            <div class="rules-sidebar">
+                <h4>📌 Assessment Rules</h4>
+                <ul>
+                    <li><b>Modules:</b> 50 marks per module scaled down to <b>25 marks</b>.</li>
+                    <li><b>Attendance:</b><br>91% - 100% = <b>2M</b><br>80% - 90% = <b>1M</b><br>&lt; 80% = <b>0M</b></li>
+                    <li><b>Passing Conditions:</b><br>- Min <b>30/60</b> overall internals.<br>- Min <b>75%</b> Attendance.<br>- Min <b>16/40</b> in externals.<br>- Combined must be <b>&ge; 50</b>.</li>
+                </ul>
+            </div>
+        </div>
+        
+        <!-- Action Buttons -->
+        <div class="controls">
+            <button class="main-btn add-btn" id="save-btn" onclick="saveSubject()">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                Add Subject to Summary
+            </button>
+            <button class="main-btn pdf-btn" onclick="downloadPDF()">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                Download PDF Report
+            </button>
+        </div>
+    </div>
+
+    <!-- SUMMARY TABLE -->
+    <div class="table-header-container">
+        <h3>Marks Summary Report</h3>
+    </div>
+    
+    <div id="results-area">
+        <table class="result-table">
+            <thead>
+                <tr>
+                    <th>Subject Name</th>
+                    <th>Scored Internals</th>
+                    <th>Target</th>
+                    <th>Target Status</th>
+                    <th>Eligibility</th>
+                    <th>Min to Pass</th>
+                    <th>Extra Needed</th>
+                    <th class="no-print">Actions</th>
+                </tr>
+            </thead>
+            <tbody id="results-body">
+                <tr id="empty-msg"><td colspan="8" style="color:var(--text-muted); padding:30px;">No data added yet. Fill the form above and click 'Add Subject'.</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <footer class="no-print">
+        <p>© 2026 N.ESHWAR (251LA05002)- Vignan ECE | For educational purposes only.</p>
+    </footer>
+</div>
+
+<script>
+    let subjectsData = [];
+    let editingIndex = -1;
+
+    // Attach listeners for instant calculations
+    document.querySelectorAll('.live-input, #inp-target, #inp-type').forEach(el => {
+        el.addEventListener('input', updateLiveTarget);
+        el.addEventListener('change', updateLiveTarget);
+    });
+
+    // NEW LOGIC: Attach auto-clear & range-warning logic to all number inputs
+    document.querySelectorAll('input[type="number"]').forEach(input => {
+        
+        // Auto-clear 0 on focus
+        input.addEventListener('focus', function() {
+            if (this.value === '0') {
+                this.value = '';
+            }
+        });
+        
+        // Restore 0 on blur if left empty
+        input.addEventListener('blur', function() {
+            if (this.value.trim() === '') {
+                this.value = '0';
+                updateLiveTarget(); // recalculate just in case
+                this.dispatchEvent(new Event('input')); // Hide any warnings 
+            }
+        });
+
+        // Show warning if over maximum
+        input.addEventListener('input', function() {
+            const maxVal = parseFloat(this.getAttribute('max'));
+            const currentVal = parseFloat(this.value);
+            const warnEl = document.getElementById('warn-' + this.id);
+            
+            if (warnEl && !isNaN(maxVal) && !isNaN(currentVal)) {
+                if (currentVal > maxVal) {
+                    warnEl.style.display = 'flex';
+                    this.classList.add('input-error');
+                } else {
+                    warnEl.style.display = 'none';
+                    this.classList.remove('input-error');
+                }
+            } else if (warnEl && isNaN(currentVal)) {
+                // Remove warning if the user clears the field completely while typing
+                warnEl.style.display = 'none';
+                this.classList.remove('input-error');
+            }
+        });
+    });
+
+    function updateLiveTarget() {
+        const targetInt = parseFloat(document.getElementById('inp-target').value) || 0;
+
+        // Module 1 (Max 50 -> Scaled to 25)
+        const mod1 = (
+            (parseFloat(document.getElementById('inp-fa1').value) || 0) +
+            (parseFloat(document.getElementById('inp-fa2').value) || 0) +
+            (parseFloat(document.getElementById('inp-cla1').value) || 0) +
+            (parseFloat(document.getElementById('inp-cla2').value) || 0)
+        ) / 2; 
+
+        // Module 2 (Max 50 -> Scaled to 25)
+        const mod2 = (
+            (parseFloat(document.getElementById('inp-fa3').value) || 0) +
+            (parseFloat(document.getElementById('inp-fa4').value) || 0) +
+            (parseFloat(document.getElementById('inp-cla3').value) || 0) +
+            (parseFloat(document.getElementById('inp-cla4').value) || 0)
+        ) / 2;
+
+        const cla5 = parseFloat(document.getElementById('inp-cla5').value) || 0;
+        const att_p = parseFloat(document.getElementById('inp-attp').value) || 0;
+        
+        // Automated Attendance Marks
+        let att_m = 0;
+        if (att_p >= 91) att_m = 2;
+        else if (att_p >= 80) att_m = 1;
+        else att_m = 0;
+
+        document.getElementById('live-attm').value = att_m; // Update disabled field
+
+        const total_int = mod1 + mod2 + cla5 + att_m; // Max 60
+
+        // Update instant display fields
+        document.getElementById('live-current').innerText = total_int.toFixed(2);
+        document.getElementById('live-target-display').innerText = targetInt.toFixed(2);
+        
+        const statusSpan = document.getElementById('live-status');
+        const container = document.getElementById('status-container');
+        
+        if (total_int >= targetInt) {
+            container.style.background = "linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)";
+            container.style.borderColor = "#bbf7d0";
+            document.getElementById('live-current').style.color = "#15803d";
+            statusSpan.innerHTML = `<span style="color:#15803d;">Target Achieved! (+${(total_int - targetInt).toFixed(2)})</span>`;
+        } else {
+            container.style.background = "linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%)";
+            container.style.borderColor = "#fde68a";
+            document.getElementById('live-current').style.color = "#b45309";
+            statusSpan.innerHTML = `<span style="color:#b45309;">Need ${(targetInt - total_int).toFixed(2)} more marks</span>`;
+        }
+    }
+
+    function saveSubject() {
+        // Collect Raw Data
+        const raw = {
+            name: document.getElementById('inp-name').value || "Unnamed Subject",
+            type: document.getElementById('inp-type').value,
+            target: parseFloat(document.getElementById('inp-target').value) || 0,
+            fa1: parseFloat(document.getElementById('inp-fa1').value) || 0,
+            fa2: parseFloat(document.getElementById('inp-fa2').value) || 0,
+            cla1: parseFloat(document.getElementById('inp-cla1').value) || 0,
+            cla2: parseFloat(document.getElementById('inp-cla2').value) || 0,
+            fa3: parseFloat(document.getElementById('inp-fa3').value) || 0,
+            fa4: parseFloat(document.getElementById('inp-fa4').value) || 0,
+            cla3: parseFloat(document.getElementById('inp-cla3').value) || 0,
+            cla4: parseFloat(document.getElementById('inp-cla4').value) || 0,
+            cla5: parseFloat(document.getElementById('inp-cla5').value) || 0,
+            attp: parseFloat(document.getElementById('inp-attp').value) || 0
+        };
+
+        // Calculations for Table Data
+        const mod1 = (raw.fa1 + raw.fa2 + raw.cla1 + raw.cla2) / 2;
+        const mod2 = (raw.fa3 + raw.fa4 + raw.cla3 + raw.cla4) / 2;
+        
+        let att_m = 0;
+        if (raw.attp >= 91) att_m = 2;
+        else if (raw.attp >= 80) att_m = 1;
+        
+        const total_int = mod1 + mod2 + raw.cla5 + att_m;
+
+        // 1. Eligibility Check
+        let eligibility = "";
+        let required_scaled_ext = Math.max(16, 50 - total_int);
+        let minPassText = "";
+
+        if (total_int < 30 || raw.attp < 75) {
+            eligibility = "<span style='color:var(--danger); font-weight:700;'>Detained (R)</span><br><small style='color:var(--text-muted);'>(Int < 30 or Attd < 75%)</small>";
+            minPassText = "<span style='color:var(--danger); font-weight:600;'>N/A (Failed)</span>";
+        } else {
+            eligibility = "<span style='color:var(--success); font-weight:700;'>Eligible</span>";
+            if (required_scaled_ext > 40) {
+                minPassText = "<span style='color:var(--danger); font-weight:600;'>Impossible to Pass</span>";
+            } else {
+                if (raw.type === 'theory') minPassText = `Need min <b>${Math.ceil(required_scaled_ext * 2)}</b> / 80`;
+                else if (raw.type === 'practical') minPassText = `Need min <b>${Math.ceil(required_scaled_ext)}</b> / 40`;
+                else if (raw.type === 'both') minPassText = `Need min <b>${required_scaled_ext.toFixed(1)}</b> / 40 (Scaled)`;
+            }
+        }
+
+        // 2. Target Calculations
+        let targetStatus = "";
+        let extraExtText = "";
+
+        if (total_int >= raw.target) {
+            targetStatus = `<span style='color:var(--success); font-weight:700; background:var(--success-bg); padding:4px 8px; border-radius:6px;'>Achieved! (+${(total_int - raw.target).toFixed(1)})</span>`;
+            extraExtText = `<span style='color:var(--text-muted); font-weight:500;'>Target Met!</span>`;
+        } else {
+            const deficit = raw.target - total_int;
+            targetStatus = `<span style='color:#b45309; font-weight:700; background:var(--warning-bg); padding:4px 8px; border-radius:6px;'>Missed by ${deficit.toFixed(1)}</span>`;
+            
+            if (raw.type === 'theory') extraExtText = `Need <b>${Math.ceil(deficit * 2)}</b> extra in Sem (80M)`;
+            else if (raw.type === 'practical') extraExtText = `Need <b>${Math.ceil(deficit)}</b> extra in Pract (40M)`;
+            else if (raw.type === 'both') extraExtText = `Need <b>${deficit.toFixed(1)}</b> extra in Ext`;
+        }
+
+        const subjectRecord = {
+            raw: raw,
+            calculated: { total_int, targetStatus, eligibility, minPassText, extraExtText, failed: (total_int < 30 || raw.attp < 75) }
+        };
+
+        // Save Data
+        const btn = document.getElementById('save-btn');
+        if (editingIndex >= 0) {
+            subjectsData[editingIndex] = subjectRecord; // Update
+            editingIndex = -1;
+            btn.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> Add Subject to Summary`;
+            btn.style.background = "var(--primary)";
+        } else {
+            subjectsData.push(subjectRecord); // Add New
+        }
+
+        renderTable();
+        resetForm();
+        
+        // Scroll to table smoothly
+        document.getElementById('results-area').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    function renderTable() {
+        const tbody = document.getElementById('results-body');
+        tbody.innerHTML = '';
+        
+        if (subjectsData.length === 0) {
+            tbody.innerHTML = '<tr id="empty-msg"><td colspan="8" style="color:var(--text-muted); padding:30px;">No data added yet. Fill the form above and click \'Add Subject\'.</td></tr>';
+            return;
+        }
+
+        subjectsData.forEach((sub, index) => {
+            const calc = sub.calculated;
+            tbody.innerHTML += `<tr>
+                <td style="font-weight:700; color:var(--text-main);">${sub.raw.name}</td>
+                <td style="color:var(--primary); font-weight:800; font-size:1.1em;">${calc.total_int.toFixed(2)}</td>
+                <td style="font-weight:700; color:var(--text-muted);">${sub.raw.target.toFixed(2)}</td>
+                <td>${calc.targetStatus}</td>
+                <td>${calc.eligibility}</td>
+                <td style="color:var(--text-main);">${calc.minPassText}</td>
+                <td style="color:var(--text-main);">${calc.failed ? "<span style='color:var(--danger); font-weight:600;'>Failed Internals</span>" : calc.extraExtText}</td>
+                <td class="no-print">
+                    <button class="action-btn edit-btn" onclick="editSubject(${index})">Edit</button>
+                    <button class="action-btn del-btn" onclick="deleteSubject(${index})">Delete</button>
+                </td>
+            </tr>`;
+        });
+    }
+
+    function editSubject(index) {
+        editingIndex = index;
+        const raw = subjectsData[index].raw;
+        
+        // Populate inputs
+        document.getElementById('inp-name').value = raw.name;
+        document.getElementById('inp-type').value = raw.type;
+        document.getElementById('inp-target').value = raw.target;
+        document.getElementById('inp-fa1').value = raw.fa1;
+        document.getElementById('inp-fa2').value = raw.fa2;
+        document.getElementById('inp-cla1').value = raw.cla1;
+        document.getElementById('inp-cla2').value = raw.cla2;
+        document.getElementById('inp-fa3').value = raw.fa3;
+        document.getElementById('inp-fa4').value = raw.fa4;
+        document.getElementById('inp-cla3').value = raw.cla3;
+        document.getElementById('inp-cla4').value = raw.cla4;
+        document.getElementById('inp-cla5').value = raw.cla5;
+        document.getElementById('inp-attp').value = raw.attp;
+
+        // Clean out any warnings from before
+        document.querySelectorAll('.range-warning').forEach(el => el.style.display = 'none');
+        document.querySelectorAll('.input-error').forEach(el => el.classList.remove('input-error'));
+
+        // Change button state
+        const btn = document.getElementById('save-btn');
+        btn.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> Update Subject`;
+        btn.style.background = "#059669"; // Emerald 600
+
+        updateLiveTarget();
+        
+        // Scroll back to form
+        document.getElementById('entry-form').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function deleteSubject(index) {
+        subjectsData.splice(index, 1);
+        renderTable();
+    }
+
+    function resetForm() {
+        document.getElementById('inp-name').value = '';
+        document.getElementById('inp-type').value = 'theory';
+        document.getElementById('inp-target').value = '50';
+        
+        const numberInputs = ['inp-fa1', 'inp-fa2', 'inp-cla1', 'inp-cla2', 'inp-fa3', 'inp-fa4', 'inp-cla3', 'inp-cla4', 'inp-cla5'];
+        numberInputs.forEach(id => document.getElementById(id).value = '0');
+        
+        document.getElementById('inp-attp').value = '100';
+        
+        // Hide all warnings visually upon resetting
+        document.querySelectorAll('.range-warning').forEach(el => el.style.display = 'none');
+        document.querySelectorAll('.input-error').forEach(el => el.classList.remove('input-error'));
+
+        updateLiveTarget();
+    }
+
+    function downloadPDF() {
+        // Only run if there is data
+        if(subjectsData.length === 0) {
+            alert("Please add at least one subject to the summary before downloading.");
+            return;
+        }
+
+        const element = document.getElementById('content-to-export');
+        const opt = {
+            margin: [10, 5, 10, 5],
+            filename: 'Internals_Target_Report.pdf',
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2, useCORS: true },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
+        };
+        
+        // Hide form and controls during capture
+        const noPrintElements = document.querySelectorAll('.no-print');
+        noPrintElements.forEach(el => el.style.display = 'none');
+
+        html2pdf().set(opt).from(element).save().then(() => {
+            // Restore form and controls after capture
+            noPrintElements.forEach(el => el.style.display = '');
+            document.querySelector('.controls').style.display = 'flex'; // Fix layout restoration
+        });
+    }
+
+    // Initialize initial state
+    updateLiveTarget();
+</script>
+</body>
+</html>
