@@ -86,6 +86,25 @@
             color: var(--primary); /* Fallback */
         }
         
+        /* Header & Logo Styles */
+        .header-container {
+            display: flex;
+            align-items: center;       /* Vertically centers the logo and text */
+            justify-content: center;   /* Horizontally centers everything */
+            gap: 15px;                 /* Space between the logo and the text */
+            margin-bottom: 10px;       
+        }
+
+        .header-container h1 {
+            margin-bottom: 0;          /* Removes extra margin so it aligns nicely with logo */
+        }
+
+        .logo {
+            height: 65px;              /* Logo size */
+            width: auto;
+            object-fit: contain;
+        }
+        
         p.subtitle { 
             text-align: center; 
             color: var(--text-muted); 
@@ -352,6 +371,7 @@
             #results-area { box-shadow: none; border: 1px solid #ddd; }
             .result-table th, .result-table td { border: 1px solid #ddd; padding: 12px; }
             .result-table th { background-color: #f3f4f6; color: #000; }
+            .header-container { margin-bottom: 20px; } /* Clean up spacing for print */
         }
 
         /* --- RESPONSIVE DESIGN --- */
@@ -385,6 +405,8 @@
             body { padding: 0; background: #ffffff; }
             .container { border-radius: 0; box-shadow: none; border: none; padding: 25px 15px; }
             
+            .header-container { flex-direction: column; gap: 10px; } /* Stack logo and text on tiny screens */
+            
             .grid { grid-template-columns: 1fr; gap: 15px; } 
             .grid-other { grid-template-columns: 1fr; }
             .grid-other > div:last-child { grid-column: auto; }
@@ -400,7 +422,12 @@
 <body>
 
 <div class="container" id="content-to-export">
-    <h1>VFSTR Internals Calculator</h1>
+    
+    <!-- NEW HEADER CONTAINER WITH LOGO -->
+    <div class="header-container">
+        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQy9hhDUa-ttD0FZSyQrryr3Ci-aWr3AyZjIkCpzwa8s16Qjd96a2eRcDTK&s=10" alt="Vignan Logo" class="logo">
+        <h1>VFSTR Internals Calculator</h1>
+    </div>
     <p class="subtitle no-print">Internals Calculator Webpage.</p>
     
     <!-- MASTER DATA ENTRY FORM -->
