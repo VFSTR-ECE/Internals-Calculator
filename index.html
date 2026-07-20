@@ -50,16 +50,20 @@
 
         /* Base & Reset */
         *, *::before, *::after { box-sizing: border-box; }
+        
         body { 
             font-family: var(--font-family); 
-            /* Professional Premium Background */
+            
+            /* --- PINTEREST IMAGE BACKGROUND --- */
             background-color: var(--bg-color);
-            background-image: 
-                radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.15) 0px, transparent 50%),
-                radial-gradient(at 100% 0%, rgba(147, 197, 253, 0.15) 0px, transparent 50%),
-                radial-gradient(at 100% 100%, rgba(167, 139, 250, 0.1) 0px, transparent 50%),
-                radial-gradient(at 0% 100%, rgba(59, 130, 246, 0.1) 0px, transparent 50%);
+            /* Replace the URL below with the DIRECT image address (.jpg) by right-clicking the image on Pinterest and selecting "Copy image address" */
+            background-image: url('https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRM2jM-yp7wjjNatfMVfOsAjdamMFo7wtQX5qSCInzzLg&s=10');
+            background-size: cover;
+            background-position: center;
             background-attachment: fixed;
+            background-repeat: no-repeat;
+            /* ---------------------------------- */
+
             color: var(--text-main);
             padding: 50px 20px; 
             margin: 0; 
