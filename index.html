@@ -55,12 +55,12 @@
             font-family: var(--font-family); 
             
             /* --- DYNAMIC BACKGROUND SETUP --- */
-            background-color: #040814; /* Fallback dark background */
-            /* The image is loaded dynamically via JavaScript below so it changes every time */
-            background-size: cover;
-            background-position: center;
-            background-attachment: fixed;
-            background-repeat: no-repeat;
+            background-color: #040814; 
+            background-size: cover;            /* Stretches image to neatly cover the entire screen */
+            background-position: center center; /* Keeps the focus in the center of the image */
+            background-attachment: fixed;      /* Keeps the image fixed in place when scrolling */
+            background-repeat: no-repeat;      /* Prevents the image from tiling */
+            image-rendering: -webkit-optimize-contrast; /* Helps slightly with sharpening scaled images */
             /* ------------------------------------ */
 
             color: var(--text-main);
