@@ -54,9 +54,9 @@
         body { 
             font-family: var(--font-family); 
             
-            /* --- MOTHERBOARD IMAGE BACKGROUND --- */
+            /* --- DYNAMIC BACKGROUND SETUP --- */
             background-color: #040814; /* Fallback dark background */
-            background-image: url('https://wallpaperaccess.com/full/3770919.jpg');
+            /* The image is loaded dynamically via JavaScript below so it changes every time */
             background-size: cover;
             background-position: center;
             background-attachment: fixed;
@@ -612,6 +612,22 @@
 </div>
 
 <script>
+    // =========================================================================
+    // NEW LOGIC: Dynamic User-Provided Backgrounds on Page Load
+    // =========================================================================
+    const eceBackgrounds = [
+        'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSwBWfoP7h6uKgmOsG-gGtSHvzc-GXMl2aVEjKMnwnUGw&s=10',
+        'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT9_C1xkqmCTMM3JS-jVJHrOXMT2k8FxKCDotWRbPFCIQ&s=10',
+        'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRM2jM-yp7wjjNatfMVfOsAjdamMFo7wtQX5qSCInzzLg&s=10',
+        'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSpupDKdY-NoKCLBX9yy62064_71MDzvRNPv7mmFnrGQA&s=10',
+        'https://png.pngtree.com/thumb_back/fh260/background/20230720/pngtree-d-illustration-of-electronic-circuitry-in-gold-against-a-black-background-image_3708711.jpg'
+    ];
+    
+    // Pick a random image from the list above and set it as the background
+    const randomBg = eceBackgrounds[Math.floor(Math.random() * eceBackgrounds.length)];
+    document.body.style.backgroundImage = `url('${randomBg}')`;
+    // =========================================================================
+
     let subjectsData = [];
     let editingIndex = -1;
 
@@ -621,7 +637,7 @@
         el.addEventListener('change', updateLiveTarget);
     });
 
-    // NEW LOGIC: Attach auto-clear & range-warning logic to all number inputs
+    // Attach auto-clear & range-warning logic to all number inputs
     document.querySelectorAll('input[type="number"]').forEach(input => {
         
         // Auto-clear 0 on focus
